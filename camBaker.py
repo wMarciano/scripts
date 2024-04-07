@@ -107,7 +107,10 @@ def bakeCamera(cams):
 def execute():
     #update(UPDATE_URL)
     try:
-        update(UPDATE_URL)
+        updated = update(UPDATE_URL)
+        if updated is 1:
+            cmds.messageLine("Updated Successfully! Re-run the script!")
+            return
     except:
         cmds.warning("Couldn't fetch updates...")
     camList = []
@@ -203,6 +206,7 @@ saved in its place.
                 if dialog == 'Yes':
                     with open(real_file, "w+") as f2:
                         f2.write(update)
+                        return 1
             else:
                 print(f"Local version {VERSION} is up to date ({version})")
-    return
+    return 0
