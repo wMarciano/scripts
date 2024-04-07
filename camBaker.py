@@ -186,7 +186,7 @@ saved in its place.
     with urllib.request.urlopen(dl_url) as upd:
         with open(__file__, "wb+") as f:
             update = upd.read().decode('utf-8')
-            print(update)
+            #print(update)
             pattern = r"(?sm)VERSION = (?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)"
             version = re.search(pattern, update)[0]
             version = version.replace("VERSION = ", "")
