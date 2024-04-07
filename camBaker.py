@@ -105,7 +105,7 @@ def bakeCamera(cams):
                 pass
 
 def execute():
-    update(UPDATE_URL)
+    #update(UPDATE_URL)
     try:
         update(UPDATE_URL)
     except:
@@ -184,10 +184,11 @@ saved in its place.
 
     #path = os.path.dirname(__file__)
     real_file = os.path.realpath(__file__)
-    #print(real_file)
+    print(real_file)
 
     with urllib.request.urlopen(dl_url) as upd:
-        with open(real_file, "wb+") as f:
+        with open(real_file, "r+") as f:
+            original = f.read()
             update = upd.read().decode('utf-8')
             #print(update)
             pattern = r"(?sm)VERSION = (?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)"
@@ -199,8 +200,9 @@ saved in its place.
                                    button=['Yes', 'No'],
                                    cb = 'No',
                                    ds = 'No')
-                if dialog == "Yes":
-                    f.write(update)
+                if dialog == 'Yes':
+                    with open(real_file, "w+") as f2:
+                        f2.write(update)
             else:
                 print(f"Local version {VERSION} is up to date ({version})")
     return
