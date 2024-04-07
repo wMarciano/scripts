@@ -105,6 +105,7 @@ def bakeCamera(cams):
                 pass
 
 def execute():
+    update(UPDATE_URL)
     try:
         update(UPDATE_URL)
     except:
@@ -167,11 +168,11 @@ saved in its place.
         seqB = map(num, re.findall('\d+|\w+', vB.replace('-SNAPSHOT', '')))
 
         # this is to ensure that 1.0 == 1.0.0 in cmp(..)
-        lenA, lenB = len(seqA), len(seqB)
+        lenA, lenB = len(list(seqA)), len(list(seqB))
         for i in range(lenA, lenB): seqA += (0,)
         for i in range(lenB, lenA): seqB += (0,)
-
-        rc = cmp(seqA, seqB)
+        import operator
+        rc = operator.eq(set(seqA), set(seqB))
 
         if rc == 0:
             if vA.endswith('-SNAPSHOT'): return -1
@@ -181,10 +182,12 @@ saved in its place.
     import urllib.request
     import os
 
-    path = os.path.dirname(__file__)
+    #path = os.path.dirname(__file__)
+    real_file = os.path.realpath(__file__)
+    #print(real_file)
 
     with urllib.request.urlopen(dl_url) as upd:
-        with open(__file__, "wb+") as f:
+        with open(real_file, "wb+") as f:
             update = upd.read().decode('utf-8')
             #print(update)
             pattern = r"(?sm)VERSION = (?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)"
@@ -199,5 +202,5 @@ saved in its place.
                 if dialog == "Yes":
                     f.write(update)
             else:
-                print(f"Local version {VERSION} is up to date.")
+                print(f"Local version {VERSION} is up to date ({version})")
     return
