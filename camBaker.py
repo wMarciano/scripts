@@ -105,10 +105,6 @@ def bakeCamera(cams):
                 pass
 
 def execute():
-    updated = update(UPDATE_URL)
-    if updated == 1:
-        cmds.messageLine("Updated Successfully! Re-run the script!")
-        return
     try:
         updated = update(UPDATE_URL)
         if updated == 1:
