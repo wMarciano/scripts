@@ -23,7 +23,7 @@ def onMayaDroppedPythonFile(*args):
     cmds.shelfButton(command="import importlib; import camBaker; importlib.reload(camBaker); camBaker.execute()", ann="Bake Cam (w/ shake!)",
                      label="camBaker", image="exportCache.png", sourceType="python", iol="camBake")
 
-    cmds.messageLine("Script successfully installed! Access it from the new button in the shelf ^")
+    sys.stdout.write("Script successfully installed! Access it from the new button in the shelf ^")
 def bakeCamera(cams):
     if cmds.nodeType(cams[0]) == 'camera':
         cams = cmds.listRelatives(allCams, parent=True)
@@ -105,11 +105,14 @@ def bakeCamera(cams):
                 pass
 
 def execute():
-    #update(UPDATE_URL)
+    updated = update(UPDATE_URL)
+    if updated == 1:
+        cmds.messageLine("Updated Successfully! Re-run the script!")
+        return
     try:
         updated = update(UPDATE_URL)
-        if updated is 1:
-            cmds.messageLine("Updated Successfully! Re-run the script!")
+        if updated == 1:
+            sys.stdout.write("Updated Successfully! Re-run the script!")
             return
     except:
         cmds.warning("Couldn't fetch updates...")
