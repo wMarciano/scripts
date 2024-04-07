@@ -1,5 +1,5 @@
 """
-Camera Baker v1.0 by Will Marciano
+Camera Baker v1.1 by Will Marciano
 """
 import maya.cmds as cmds
 import maya.mel as mel
@@ -10,11 +10,10 @@ import urllib
 import re
 from subprocess import call
 
-VERSION = 1.0
+VERSION = 1.1
 UPDATE_URL = "https://raw.githubusercontent.com/wMarciano/scripts/main/camBaker.py"
 
 def onMayaDroppedPythonFile(*args):
-
     prefs_dir = os.path.dirname(cmds.about(preferences=True))
     scripts_dir = os.path.normpath(os.path.join(prefs_dir, "scripts"))
     shutil.copy(__file__, scripts_dir)
@@ -24,7 +23,7 @@ def onMayaDroppedPythonFile(*args):
     cmds.shelfButton(command="import importlib; import camBaker; importlib.reload(camBaker); camBaker.execute()", ann="Bake Cam (w/ shake!)",
                      label="camBaker", image="exportCache.png", sourceType="python", iol="camBake")
 
-    cmds.warning("Script successfully installed! Access it from the new button in the shelf ^")
+    cmds.messageLine("Script successfully installed! Access it from the new button in the shelf ^")
 def bakeCamera(cams):
     if cmds.nodeType(cams[0]) == 'camera':
         cams = cmds.listRelatives(allCams, parent=True)
@@ -41,14 +40,14 @@ def bakeCamera(cams):
         # get a list of all camera shape attributes
         camAttr = cmds.listAttr(camShape)
         camAttr += ['translate', 'rotate', 'scale']
-    
+
         # loop through all attributes and connect them to the new camera
         for attr in camAttr:
             try:
                 cmds.connectAttr(camShape+'.'+ attr, bakeCamShape+'.'+ attr, force=True)
             except RuntimeError:
                 pass
-        dialog = cmds.confirmDialog(t='Cam Baker v1.0',
+        dialog = cmds.confirmDialog(t=f'Cam Baker v{VERSION}',
                                     m=f'Which axis is HORIZONTAL for {cam}?',
                                     button=['X', 'Y (Default)', 'Z', 'Cancel'],
                                     db='Y',
@@ -58,7 +57,7 @@ def bakeCamera(cams):
             return
         else:
             horizontalAxis = dialog.replace(" (Default)","")
-        dialog = cmds.confirmDialog(t='Cam Baker v1.0',
+        dialog = cmds.confirmDialog(t=f'Cam Baker v{VERSION}',
                                     m=f'Which axis is VERTICAL for {cam}?',
                                     button=['X (Default)', 'Y', 'Z', 'Cancel'],
                                     db='X',
@@ -95,7 +94,7 @@ def bakeCamera(cams):
                          time=(cmds.playbackOptions(q=True, min=True), cmds.playbackOptions(q=True, max=True)))
         #cmds.delete("camBake_exprVertical")
         #cmds.delete("camBake_exprHorizontal")
-    
+
         # iterate through each attribute and disconnect it
         for attr in camAttr:
             try:
@@ -106,6 +105,10 @@ def bakeCamera(cams):
                 pass
 
 def execute():
+    try:
+        update(UPDATE_URL)
+    except:
+        cmds.warning("Couldn't fetch updates...")
     camList = []
     selected = cmds.ls(sl=True)
     allCams = cmds.listRelatives(cmds.ls(type="camera"), parent=True)
@@ -114,8 +117,8 @@ def execute():
         activeCam = 'persp'
         for panel in cmds.getPanel(type="modelPanel"):
             activeCam = cmds.modelEditor(panel, q=1, av=1, cam=1)
-        dialog = cmds.confirmDialog(t='Add Camera Shake',
-                                    m=f'No camera selected! Would you like to add it to your active camera, {activeCam}?',
+        dialog = cmds.confirmDialog(t='Bake Camera',
+                                    m=f'No camera selected! Would you like to bake your active camera, {activeCam}?',
                                     button=['Yes', 'Different Camera', 'Cancel'],
                                     db='Yes',
                                     cb='Cancel',
@@ -125,8 +128,8 @@ def execute():
         elif dialog == "Different Camera":
             options = allCams
             options.append("Cancel")
-            dialog2 = cmds.confirmDialog(t='Add Camera Shake',
-                                         m=f'Add shake to which camera?',
+            dialog2 = cmds.confirmDialog(t='Bake Camera',
+                                         m=f'Bake which camera?',
                                          button=options,
                                          db=options[0],
                                          cb='Cancel',
@@ -181,11 +184,20 @@ saved in its place.
     path = os.path.dirname(__file__)
 
     with urllib.request.urlopen(dl_url) as upd:
-        with open(path, "wb+") as f:
-            update = upd.read()
-            version = re.match(r"VERSION = (?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)", upd.read())
+        with open(__file__, "wb+") as f:
+            update = upd.read().decode('utf-8')
+            print(update)
+            pattern = r"(?sm)VERSION = (?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)"
+            version = re.search(pattern, update)[0]
             version = version.replace("VERSION = ", "")
-            if compare_versions(version, VERSION):
-                print(f"Version {version} is availible. You have version {VERSION}. Updating.")
-                f.write(update)
+            if compare_versions(version, str(VERSION)):
+                dialog= cmds.confirmDialog(t="CamBaker Update Available!",
+                    m=f"Version {version} is available. You have version {VERSION}. Update?",
+                                   button=['Yes', 'No'],
+                                   cb = 'No',
+                                   ds = 'No')
+                if dialog == "Yes":
+                    f.write(update)
+            else:
+                print(f"Local version {VERSION} is up to date.")
     return
